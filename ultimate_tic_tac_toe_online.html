@@ -1,0 +1,805 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Ultimate 3 en Raya Anidado (729 Casillas) - Online</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- FontAwesome Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Outfit', sans-serif;
+        }
+        .cell-glow-x {
+            text-shadow: 0 0 12px rgba(239, 68, 68, 0.7);
+        }
+        .cell-glow-o {
+            text-shadow: 0 0 12px rgba(59, 130, 246, 0.7);
+        }
+        .glass-panel {
+            background: rgba(15, 23, 42, 0.85);
+            backdrop-filter: blur(16px);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+        }
+        .pulse-active {
+            animation: pulse-border 2s infinite;
+        }
+        @keyframes pulse-border {
+            0%, 100% { border-color: rgba(99, 102, 241, 0.8); box-shadow: 0 0 15px rgba(99, 102, 241, 0.3); }
+            50% { border-color: rgba(168, 85, 247, 0.8); box-shadow: 0 0 25px rgba(168, 85, 247, 0.5); }
+        }
+    </style>
+</head>
+<body class="bg-slate-950 text-slate-100 min-h-screen flex flex-col items-center justify-center p-3 sm:p-6 selection:bg-indigo-500 selection:text-white">
+
+    <!-- Toast Notification Container -->
+    <div id="toast" class="fixed top-5 right-5 z-50 transform translate-x-full transition-transform duration-300 ease-in-out px-4 py-3 rounded-2xl shadow-2xl flex items-center gap-3 border border-slate-700 bg-slate-900 text-slate-100 max-w-sm">
+        <i id="toast-icon" class="fas fa-info-circle text-indigo-400 text-lg"></i>
+        <span id="toast-message" class="text-sm font-medium">Notificación</span>
+    </div>
+
+    <div class="w-full max-w-2xl mx-auto flex flex-col items-center">
+        <!-- Header / Logo -->
+        <header class="text-center mb-4 sm:mb-6">
+            <h1 class="text-2xl sm:text-4xl font-extrabold tracking-tight bg-gradient-to-r from-red-500 via-purple-500 to-blue-500 bg-clip-text text-transparent">
+                ULTIMATE 3 EN RAYA ANIDADO
+            </h1>
+            <p class="text-xs text-slate-400 mt-1 uppercase tracking-widest font-semibold">3 Niveles &bull; 729 Posiciones &bull; Multijugador Online</p>
+        </header>
+
+        <!-- Main Card Container -->
+        <main class="w-full glass-panel rounded-3xl p-4 sm:p-6 shadow-2xl relative overflow-hidden">
+
+            <!-- LOBBY SCREEN -->
+            <div id="lobby-screen" class="flex flex-col gap-6 py-2">
+                <div class="text-center space-y-2">
+                    <div class="inline-flex items-center justify-center w-16 h-16 rounded-2xl bg-indigo-500/10 text-indigo-400 border border-indigo-500/20 mb-1 shadow-inner">
+                        <i class="fas fa-layer-group text-3xl"></i>
+                    </div>
+                    <h2 class="text-xl sm:text-2xl font-bold text-slate-100">Sala de Partida</h2>
+                    <p class="text-slate-400 text-sm max-w-md mx-auto">
+                        Juega al ultra 3 en raya de 3 niveles. Cada casilla de un tablero es otro tablero completo. ¡Estrategia pura en tiempo real!
+                    </p>
+                </div>
+
+                <div class="space-y-4 max-w-sm mx-auto w-full">
+                    <!-- Create Room -->
+                    <button id="btn-create-room" class="w-full py-4 px-6 bg-gradient-to-r from-indigo-600 to-violet-600 hover:from-indigo-500 hover:to-violet-500 text-white font-bold rounded-2xl shadow-lg shadow-indigo-600/30 active:scale-[0.98] transition-all duration-200 flex items-center justify-center gap-3 group">
+                        <i class="fas fa-plus-circle text-lg group-hover:rotate-90 transition-transform duration-300"></i>
+                        <span>Crear Nueva Sala</span>
+                    </button>
+
+                    <div class="relative flex py-1 items-center">
+                        <div class="flex-grow border-t border-slate-800"></div>
+                        <span class="flex-shrink mx-4 text-slate-500 text-xs uppercase font-semibold">o unirse</span>
+                        <div class="flex-grow border-t border-slate-800"></div>
+                    </div>
+
+                    <!-- Join Room -->
+                    <div class="flex flex-col gap-2.5">
+                        <div class="relative">
+                            <input type="text" id="input-room-code" placeholder="Código de sala (ej: 4821)" maxlength="6" class="w-full bg-slate-900/90 border border-slate-700/80 rounded-2xl px-4 py-3.5 pl-11 text-center text-lg font-mono tracking-widest text-slate-100 placeholder-slate-500 focus:outline-none focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/20 transition-all uppercase">
+                            <i class="fas fa-key absolute left-4 top-1/2 -translate-y-1/2 text-slate-500"></i>
+                        </div>
+                        <button id="btn-join-room" class="w-full py-3.5 px-6 bg-slate-800 hover:bg-slate-700 text-slate-200 font-semibold rounded-2xl border border-slate-700/60 active:scale-[0.98] transition-all duration-200 flex items-center justify-center gap-2">
+                            <i class="fas fa-sign-in-alt text-indigo-400"></i>
+                            <span>Unirse a la Sala</span>
+                        </button>
+                    </div>
+                </div>
+
+                <div id="auth-status" class="text-center text-xs text-slate-500 pt-2 flex items-center justify-center gap-2">
+                    <span class="w-2 h-2 rounded-full bg-yellow-500 animate-pulse" id="auth-indicator"></span>
+                    <span id="auth-text">Conectando al servidor seguro...</span>
+                </div>
+            </div>
+
+            <!-- GAMEPLAY SCREEN -->
+            <div id="game-screen" class="hidden flex-col gap-4">
+                <!-- Room info header -->
+                <div class="flex items-center justify-between bg-slate-900/90 rounded-2xl p-3 border border-slate-800 shadow-sm">
+                    <div class="flex items-center gap-2">
+                        <span class="text-[11px] text-slate-400 uppercase font-bold tracking-wider">SALA:</span>
+                        <span id="display-room-code" class="font-mono font-bold text-indigo-400 bg-indigo-500/10 px-2.5 py-1 rounded-lg border border-indigo-500/20 text-sm">------</span>
+                    </div>
+                    <div class="flex items-center gap-2">
+                        <button id="btn-copy-code" class="text-xs bg-slate-800 hover:bg-slate-700 text-slate-300 px-3 py-1.5 rounded-xl border border-slate-700 flex items-center gap-1.5 transition-colors">
+                            <i class="fas fa-copy text-indigo-400"></i>
+                            <span>Copiar</span>
+                        </button>
+                        <button id="btn-leave" class="text-xs bg-slate-800 hover:bg-slate-700 text-red-300 px-3 py-1.5 rounded-xl border border-slate-700 flex items-center gap-1.5 transition-colors">
+                            <i class="fas fa-sign-out-alt"></i>
+                            <span>Salir</span>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Players Status Grid -->
+                <div class="grid grid-cols-2 gap-3">
+                    <!-- Player X -->
+                    <div id="card-player-x" class="bg-slate-900/60 border-2 border-slate-800 rounded-2xl p-3 flex flex-col items-center relative transition-all">
+                        <div class="text-red-500 font-extrabold text-xl mb-0.5">X</div>
+                        <div class="text-xs text-slate-300 font-medium truncate max-w-full" id="name-player-x">Jugador 1</div>
+                        <span id="badge-player-x" class="text-[10px] uppercase font-bold px-2 py-0.5 rounded-full mt-1 bg-slate-800 text-slate-400">Esperando...</span>
+                    </div>
+
+                    <!-- Player O -->
+                    <div id="card-player-o" class="bg-slate-900/60 border-2 border-slate-800 rounded-2xl p-3 flex flex-col items-center relative transition-all">
+                        <div class="text-blue-500 font-extrabold text-xl mb-0.5">O</div>
+                        <div class="text-xs text-slate-300 font-medium truncate max-w-full" id="name-player-o">Jugador 2</div>
+                        <span id="badge-player-o" class="text-[10px] uppercase font-bold px-2 py-0.5 rounded-full mt-1 bg-slate-800 text-slate-400">Esperando...</span>
+                    </div>
+                </div>
+
+                <!-- Turn & Target Banner -->
+                <div id="game-status-banner" class="bg-slate-900/90 py-2.5 px-4 rounded-xl text-center border border-slate-800 text-sm font-semibold text-slate-300 flex flex-col sm:flex-row items-center justify-between gap-2 shadow-inner">
+                    <div id="status-message" class="flex items-center gap-2">
+                        <span class="inline-block w-2 h-2 rounded-full bg-indigo-500 animate-ping"></span>
+                        <span>Esperando oponente...</span>
+                    </div>
+                    <button id="btn-focus-target" class="hidden text-xs bg-indigo-600/30 hover:bg-indigo-600/50 text-indigo-300 px-3 py-1 rounded-lg border border-indigo-500/30 transition-all flex items-center gap-1.5">
+                        <i class="fas fa-crosshairs"></i>
+                        <span>Ir al tablero activo</span>
+                    </button>
+                </div>
+
+                <!-- Breadcrumb Navigation for 3-Level Drill-Down -->
+                <div id="breadcrumb-container" class="flex items-center gap-2 bg-slate-900/60 px-3.5 py-2 rounded-xl border border-slate-800/80 text-xs text-slate-400 overflow-x-auto">
+                    <!-- Dynamically populated breadcrumbs: Master > Middle > Inner -->
+                </div>
+
+                <!-- BOARD CONTAINER (Hierarchical Drill-down View) -->
+                <div id="board-container" class="w-full aspect-square max-w-[440px] mx-auto bg-slate-900/40 p-3 rounded-2xl border border-slate-800/80 relative flex items-center justify-center">
+                    <!-- Overlay if game waiting or ended -->
+                    <div id="board-overlay" class="absolute inset-0 bg-slate-950/75 backdrop-blur-sm rounded-2xl z-20 flex flex-col items-center justify-center p-4 text-center">
+                        <i id="overlay-icon" class="fas fa-spinner fa-spin text-4xl text-indigo-400 mb-3"></i>
+                        <p id="overlay-text" class="text-base font-bold text-slate-100">Esperando al oponente...</p>
+                        <p id="overlay-subtext" class="text-xs text-slate-400 mt-1">Comparte el código de la sala con un amigo</p>
+                        <button id="btn-restart" class="hidden mt-4 py-2.5 px-6 bg-indigo-600 hover:bg-indigo-500 text-white font-bold rounded-xl shadow-lg shadow-indigo-600/30 active:scale-95 transition-all text-sm flex items-center gap-2">
+                            <i class="fas fa-redo"></i>
+                            <span>Jugar Otra Vez</span>
+                        </button>
+                    </div>
+
+                    <!-- Dynamic Board Grid (Rendered via JS depending on viewLevel) -->
+                    <div id="active-grid" class="w-full h-full grid grid-cols-3 gap-2.5">
+                        <!-- Populated dynamically -->
+                    </div>
+                </div>
+
+                <div class="text-center text-[11px] text-slate-500">
+                    Regla: Tu jugada determina el tablero donde deberá jugar el rival (a menos que esté ganado o completo).
+                </div>
+            </div>
+
+        </main>
+        
+        <footer class="mt-4 text-slate-600 text-xs text-center font-medium">
+            Ultimate 3 en Raya Anidado &bull; Multijugador Global
+        </footer>
+    </div>
+
+    <!-- Firebase SDK Modules -->
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
+        import { getAuth, signInAnonymously, signInWithCustomToken, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+        import { getFirestore, doc, setDoc, getDoc, updateDoc, onSnapshot } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+
+        // Firebase Configuration fallback
+        const firebaseConfig = typeof __firebase_config !== 'undefined' 
+            ? JSON.parse(__firebase_config) 
+            : {
+                apiKey: "demo-key",
+                authDomain: "demo-app.firebaseapp.com",
+                projectId: "demo-app",
+                storageBucket: "demo-app.appspot.com",
+                messagingSenderId: "123456789",
+                appId: "1:123456789:web:abcdef"
+            };
+
+        const appId = typeof __app_id !== 'undefined' ? __app_id : 'ultimate-tictactoe-729';
+
+        const app = initializeApp(firebaseConfig);
+        const auth = getAuth(app);
+        const db = getFirestore(app);
+
+        // App State
+        let currentUser = null;
+        let currentRoomId = null;
+        let playerSymbol = null; // 'X' or 'O'
+        let unsubscribeRoom = null;
+        let currentGameData = null;
+
+        // Navigation View State (Drill-down for 729 cells)
+        // viewLevel: 'master' (showing 9 master boards), 'middle' (showing 9 middle boards of selectedM), 'inner' (showing 9 inner cells of selectedMid within selectedM)
+        let navState = {
+            level: 'master', // 'master' | 'middle' | 'inner'
+            selectedM: null, // 0..8
+            selectedMid: null // 0..8
+        };
+
+        // DOM Elements
+        const lobbyScreen = document.getElementById('lobby-screen');
+        const gameScreen = document.getElementById('game-screen');
+        const btnCreateRoom = document.getElementById('btn-create-room');
+        const btnJoinRoom = document.getElementById('btn-join-room');
+        const inputRoomCode = document.getElementById('input-room-code');
+        const authIndicator = document.getElementById('auth-indicator');
+        const authText = document.getElementById('auth-text');
+        
+        const displayRoomCode = document.getElementById('display-room-code');
+        const btnCopyCode = document.getElementById('btn-copy-code');
+        const btnLeave = document.getElementById('btn-leave');
+        const boardOverlay = document.getElementById('board-overlay');
+        const overlayIcon = document.getElementById('overlay-icon');
+        const overlayText = document.getElementById('overlay-text');
+        const overlaySubtext = document.getElementById('overlay-subtext');
+        const btnRestart = document.getElementById('btn-restart');
+        const statusMessage = document.getElementById('status-message');
+        const btnFocusTarget = document.getElementById('btn-focus-target');
+        const breadcrumbContainer = document.getElementById('breadcrumb-container');
+        const activeGrid = document.getElementById('active-grid');
+
+        const cardPlayerX = document.getElementById('card-player-x');
+        const cardPlayerO = document.getElementById('card-player-o');
+        const badgePlayerX = document.getElementById('badge-player-x');
+        const badgePlayerO = document.getElementById('badge-player-o');
+        const namePlayerX = document.getElementById('name-player-x');
+        const namePlayerO = document.getElementById('name-player-o');
+
+        // Toast Notifications
+        function showToast(message, iconClass = 'fa-info-circle text-indigo-400') {
+            const toast = document.getElementById('toast');
+            const toastMsg = document.getElementById('toast-message');
+            const toastIcon = document.getElementById('toast-icon');
+
+            toastMsg.textContent = message;
+            toastIcon.className = `fas ${iconClass} text-lg`;
+
+            toast.classList.remove('translate-x-full');
+            setTimeout(() => {
+                toast.classList.add('translate-x-full');
+            }, 3500);
+        }
+
+        // Auth
+        async function initAuth() {
+            try {
+                if (typeof __initial_auth_token !== 'undefined' && __initial_auth_token) {
+                    await signInWithCustomToken(auth, __initial_auth_token);
+                } else {
+                    await signInAnonymously(auth);
+                }
+            } catch (err) {
+                console.error("Auth error:", err);
+                authText.textContent = "Error de conexión";
+                authIndicator.className = "w-2 h-2 rounded-full bg-red-500";
+            }
+        }
+
+        onAuthStateChanged(auth, (user) => {
+            if (user) {
+                currentUser = user;
+                authText.textContent = "Conectado al servidor";
+                authIndicator.className = "w-2 h-2 rounded-full bg-emerald-500";
+                btnCreateRoom.disabled = false;
+                btnJoinRoom.disabled = false;
+            }
+        });
+
+        initAuth();
+
+        function generateRoomCode() {
+            return Math.floor(1000 + Math.random() * 9000).toString();
+        }
+
+        function getRoomDocRef(roomId) {
+            return doc(db, 'artifacts', appId, 'public', 'data', 'rooms', roomId);
+        }
+
+        // Win checker for any 3x3 array
+        function check3x3Win(cellsArr) {
+            const lines = [
+                [0,1,2], [3,4,5], [6,7,8],
+                [0,3,6], [1,4,7], [2,5,8],
+                [0,4,8], [2,4,6]
+            ];
+            for (let line of lines) {
+                const [a,b,c] = line;
+                if (cellsArr[a] && cellsArr[a] === cellsArr[b] && cellsArr[a] === cellsArr[c]) {
+                    return cellsArr[a];
+                }
+            }
+            if (cellsArr.every(c => c !== "")) return 'D'; // Draw
+            return null;
+        }
+
+        // Calculate all levels from 729 leaf cells
+        function computeGameWins(board729) {
+            // board729 is array of 729 strings
+            // 81 inner boards (m: 0..8, mid: 0..8)
+            const innerWins = Array(81).fill("");
+            for (let m = 0; m < 9; m++) {
+                for (let mid = 0; mid < 9; mid++) {
+                    const innerCells = [];
+                    for (let inIdx = 0; inIdx < 9; inIdx++) {
+                        const idx = m * 81 + mid * 9 + inIdx;
+                        innerCells.push(board729[idx]);
+                    }
+                    innerWins[m * 9 + mid] = check3x3Win(innerCells);
+                }
+            }
+
+            // 9 middle boards (m: 0..8)
+            const middleWins = Array(9).fill("");
+            for (let m = 0; m < 9; m++) {
+                const midCells = [];
+                for (let mid = 0; mid < 9; mid++) {
+                    midCells.push(innerWins[m * 9 + mid] || "");
+                }
+                middleWins[m] = check3x3Win(midCells);
+            }
+
+            // Master board (1 board of 9)
+            const masterWins = [];
+            for (let m = 0; m < 9; m++) {
+                masterWins.push(middleWins[m] || "");
+            }
+            const masterWin = check3x3Win(masterWins);
+
+            return { innerWins, middleWins, masterWins, masterWin };
+        }
+
+        // Action: Create Room
+        btnCreateRoom.addEventListener('click', async () => {
+            if (!currentUser) {
+                showToast("Conectando con el servidor...", "fa-exclamation-triangle text-yellow-400");
+                return;
+            }
+
+            const code = generateRoomCode();
+            const roomRef = getRoomDocRef(code);
+
+            const initialData = {
+                roomId: code,
+                hostId: currentUser.uid,
+                playerX: currentUser.uid,
+                playerO: null,
+                board: Array(729).fill(""),
+                turn: "X",
+                status: "waiting", // waiting, playing, won, draw
+                winner: null,
+                targetM: null,    // null means free choice
+                targetMid: null,  // null means free choice
+                createdAt: Date.now()
+            };
+
+            try {
+                await setDoc(roomRef, initialData);
+                playerSymbol = "X";
+                currentRoomId = code;
+                navState = { level: 'master', selectedM: null, selectedMid: null };
+                listenToRoom(code);
+                showScreen('game');
+                showToast(`Sala ${code} creada. ¡Comparte el código!`, 'fa-check-circle text-emerald-400');
+            } catch (err) {
+                console.error("Error creating room:", err);
+                showToast("Error al crear la sala", "fa-times-circle text-red-400");
+            }
+        });
+
+        // Action: Join Room
+        btnJoinRoom.addEventListener('click', async () => {
+            if (!currentUser) return;
+
+            const code = inputRoomCode.value.trim().toUpperCase();
+            if (!code) {
+                showToast("Introduce un código de sala válido", "fa-exclamation-circle text-amber-400");
+                return;
+            }
+
+            const roomRef = getRoomDocRef(code);
+
+            try {
+                const snap = await getDoc(roomRef);
+                if (!snap.exists()) {
+                    showToast("La sala indicada no existe", "fa-times-circle text-red-400");
+                    return;
+                }
+
+                const data = snap.data();
+
+                if (data.playerX === currentUser.uid) {
+                    playerSymbol = "X";
+                } else if (data.playerO === currentUser.uid) {
+                    playerSymbol = "O";
+                } else if (!data.playerO) {
+                    playerSymbol = "O";
+                    await updateDoc(roomRef, {
+                        playerO: currentUser.uid,
+                        status: "playing"
+                    });
+                } else {
+                    showToast("La sala ya está llena", "fa-exclamation-triangle text-yellow-400");
+                    return;
+                }
+
+                currentRoomId = code;
+                navState = { level: 'master', selectedM: null, selectedMid: null };
+                listenToRoom(code);
+                showScreen('game');
+                showToast("¡Te has unido con éxito!", "fa-check-circle text-emerald-400");
+
+            } catch (err) {
+                console.error("Error joining room:", err);
+                showToast("Error al unirse a la sala", "fa-times-circle text-red-400");
+            }
+        });
+
+        btnCopyCode.addEventListener('click', () => {
+            if (!currentRoomId) return;
+            const temp = document.createElement("input");
+            temp.value = currentRoomId;
+            document.body.appendChild(temp);
+            temp.select();
+            document.execCommand('copy');
+            document.body.removeChild(temp);
+            showToast("Código copiado al portapapeles", "fa-copy text-indigo-400");
+        });
+
+        function listenToRoom(roomId) {
+            if (unsubscribeRoom) unsubscribeRoom();
+
+            const roomRef = getRoomDocRef(roomId);
+
+            unsubscribeRoom = onSnapshot(roomRef, (snapshot) => {
+                if (!snapshot.exists()) {
+                    showToast("La sala fue cerrada", "fa-info-circle text-slate-400");
+                    leaveRoom();
+                    return;
+                }
+
+                const data = snapshot.data();
+                currentGameData = data;
+                renderGame(data);
+            }, (error) => {
+                console.error("Sync error:", error);
+                showToast("Error de sincronización", "fa-exclamation-triangle text-red-400");
+            });
+        }
+
+        // Render Game State & Navigation
+        function renderGame(data) {
+            displayRoomCode.textContent = data.roomId;
+
+            namePlayerX.textContent = data.playerX === currentUser.uid ? "Tú (X)" : "Oponente (X)";
+            namePlayerO.textContent = data.playerO 
+                ? (data.playerO === currentUser.uid ? "Tú (O)" : "Oponente (O)")
+                : "Esperando...";
+
+            badgePlayerX.textContent = data.playerX === currentUser.uid ? "Tú" : "Rival";
+            badgePlayerO.textContent = data.playerO 
+                ? (data.playerO === currentUser.uid ? "Tú" : "Rival")
+                : "Vacío";
+
+            cardPlayerX.classList.remove('border-red-500', 'bg-red-500/10', 'shadow-lg', 'shadow-red-500/10');
+            cardPlayerO.classList.remove('border-blue-500', 'bg-blue-500/10', 'shadow-lg', 'shadow-blue-500/10');
+
+            if (data.status === 'playing') {
+                if (data.turn === 'X') {
+                    cardPlayerX.classList.add('border-red-500', 'bg-red-500/10', 'shadow-lg', 'shadow-red-500/10');
+                } else {
+                    cardPlayerO.classList.add('border-blue-500', 'bg-blue-500/10', 'shadow-lg', 'shadow-blue-500/10');
+                }
+            }
+
+            // Status message & banner
+            btnFocusTarget.classList.add('hidden');
+            if (data.status === 'waiting') {
+                boardOverlay.classList.remove('hidden');
+                overlayIcon.className = "fas fa-spinner fa-spin text-4xl text-indigo-400 mb-3";
+                overlayText.textContent = "Esperando al segundo jugador...";
+                overlaySubtext.textContent = "Comparte el código con un amigo";
+                btnRestart.classList.add('hidden');
+                statusMessage.innerHTML = `<span class="inline-block w-2 h-2 rounded-full bg-indigo-500 animate-ping"></span><span>Esperando oponente...</span>`;
+            } else if (data.status === 'playing') {
+                boardOverlay.classList.add('hidden');
+                
+                // Show focus target button if we are looking elsewhere
+                const isMyTurn = data.turn === playerSymbol;
+                if (isMyTurn) {
+                    if (data.targetM !== null) {
+                        statusMessage.innerHTML = `<span class="text-emerald-400 font-bold">¡Tu turno!</span> Debes jugar en Master #${data.targetM + 1}, Middle #${data.targetMid + 1}`;
+                        if (navState.level !== 'inner' || navState.selectedM !== data.targetM || navState.selectedMid !== data.targetMid) {
+                            btnFocusTarget.classList.remove('hidden');
+                        }
+                    } else {
+                        statusMessage.innerHTML = `<span class="text-emerald-400 font-bold">¡Tu turno libre!</span> Puedes jugar en cualquier tablero activo.`;
+                    }
+                } else {
+                    statusMessage.innerHTML = `<span class="text-slate-400">Turno del oponente (${data.turn})...</span>`;
+                }
+            } else if (data.status === 'won') {
+                boardOverlay.classList.remove('hidden');
+                overlayIcon.className = "fas fa-trophy text-5xl text-yellow-400 mb-3 animate-bounce";
+                const isWinner = data.winner === playerSymbol;
+                overlayText.textContent = isWinner ? "¡VICTORIA ÉPICA! 🎉" : `Derrota 😞 Gano el jugador ${data.winner}`;
+                overlaySubtext.textContent = "Partida finalizada";
+                btnRestart.classList.remove('hidden');
+                statusMessage.innerHTML = `<span class="text-yellow-400 font-bold">Partida finalizada. Ganador: ${data.winner}</span>`;
+            } else if (data.status === 'draw') {
+                boardOverlay.classList.remove('hidden');
+                overlayIcon.className = "fas fa-handshake text-5xl text-blue-400 mb-3";
+                overlayText.textContent = "¡EMPATE GENERAL! 🤝";
+                overlaySubtext.textContent = "El tablero se ha llenado sin ganador";
+                btnRestart.classList.remove('hidden');
+                statusMessage.innerHTML = `<span class="text-yellow-400 font-bold">Empate en el tablero global</span>`;
+            }
+
+            renderBreadcrumbs();
+            renderActiveGrid(data);
+        }
+
+        // Render Breadcrumb Navigation
+        function renderBreadcrumbs() {
+            let html = `<button onclick="navigateTo('master', null, null)" class="hover:text-indigo-400 font-semibold transition-colors flex items-center gap-1"><i class="fas fa-globe"><span>Master</span></i></button>`;
+            
+            if (navState.level === 'middle' || navState.level === 'inner') {
+                html += ` <i class="fas fa-chevron-right text-[10px] text-slate-600"></i> `;
+                html += `<button onclick="navigateTo('middle', ${navState.selectedM}, null)" class="hover:text-indigo-400 font-semibold transition-colors">Master #${navState.selectedM + 1}</button>`;
+            }
+
+            if (navState.level === 'inner') {
+                html += ` <i class="fas fa-chevron-right text-[10px] text-slate-600"></i> `;
+                html += `<span class="text-indigo-400 font-bold">Middle #${navState.selectedMid + 1}</span>`;
+            }
+
+            breadcrumbContainer.innerHTML = html;
+        }
+
+        window.navigateTo = function(level, m, mid) {
+            navState.level = level;
+            navState.selectedM = m;
+            navState.selectedMid = mid;
+            if (currentGameData) renderGame(currentGameData);
+        };
+
+        btnFocusTarget.addEventListener('click', () => {
+            if (!currentGameData || currentGameData.targetM === null) return;
+            navigateTo('inner', currentGameData.targetM, currentGameData.targetMid);
+        });
+
+        // Render Active Grid based on navState and game data
+        function renderActiveGrid(data) {
+            const { innerWins, middleWins, masterWin } = computeGameWins(data.board);
+            activeGrid.innerHTML = '';
+
+            if (navState.level === 'master') {
+                // Show 9 Master cells
+                for (let m = 0; m < 9; m++) {
+                    const cellDiv = document.createElement('div');
+                    const mWin = middleWins[m]; // Using middleWins as summary of master cells
+                    const isTarget = data.status === 'playing' && (data.targetM === null || data.targetM === m);
+
+                    cellDiv.className = `rounded-2xl border-2 flex flex-col items-center justify-center p-2 transition-all relative overflow-hidden select-none ${
+                        mWin ? (mWin === 'X' ? 'bg-red-500/15 border-red-500/60 text-red-500' : mWin === 'O' ? 'bg-blue-500/15 border-blue-500/60 text-blue-500' : 'bg-slate-800 border-slate-700 text-slate-400')
+                        : isTarget ? 'bg-indigo-950/40 border-indigo-500/80 pulse-active cursor-pointer hover:bg-indigo-900/40'
+                        : 'bg-slate-900/90 border-slate-800 cursor-pointer hover:bg-slate-800/60'
+                    }`;
+
+                    if (mWin) {
+                        cellDiv.innerHTML = `<div class="text-3xl sm:text-4xl font-extrabold ${mWin === 'X' ? 'cell-glow-x' : 'cell-glow-o'}">${mWin === 'D' ? '=' : mWin}</div><div class="text-[9px] text-slate-400 uppercase font-bold mt-1">Conquistado</div>`;
+                    } else {
+                        // Mini preview of 9 middle boards for this master cell
+                        cellDiv.innerHTML = `
+                            <div class="grid grid-cols-3 gap-1 w-full h-full max-w-[90px] max-h-[90px] pointer-events-none opacity-80">
+                                ${Array(9).fill(0).map((_, midIdx) => {
+                                    const w = innerWins[m * 9 + midIdx];
+                                    return `<div class="bg-slate-950/80 rounded border border-slate-800 flex items-center justify-center text-[10px] font-bold ${w === 'X' ? 'text-red-400' : w === 'O' ? 'text-blue-400' : 'text-slate-600'}">${w || ''}</div>`;
+                                }).join('')}
+                            </div>
+                            <div class="text-[10px] font-bold text-slate-400 mt-1">Master #${m + 1}</div>
+                        `;
+                        cellDiv.addEventListener('click', () => {
+                            navigateTo('middle', m, null);
+                        });
+                    }
+                    activeGrid.appendChild(cellDiv);
+                }
+            } else if (navState.level === 'middle') {
+                // Show 9 Middle boards of selectedM
+                const m = navState.selectedM;
+                for (let mid = 0; mid < 9; mid++) {
+                    const cellDiv = document.createElement('div');
+                    const innerWin = innerWins[m * 9 + mid];
+                    const isTarget = data.status === 'playing' && (data.targetM === null || (data.targetM === m && data.targetMid === mid));
+
+                    cellDiv.className = `rounded-2xl border-2 flex flex-col items-center justify-center p-2 transition-all relative overflow-hidden select-none ${
+                        innerWin ? (innerWin === 'X' ? 'bg-red-500/15 border-red-500/60 text-red-500' : innerWin === 'O' ? 'bg-blue-500/15 border-blue-500/60 text-blue-500' : 'bg-slate-800 border-slate-700 text-slate-400')
+                        : isTarget ? 'bg-indigo-950/40 border-indigo-500/80 pulse-active cursor-pointer hover:bg-indigo-900/40'
+                        : 'bg-slate-900/90 border-slate-800 cursor-pointer hover:bg-slate-800/60'
+                    }`;
+
+                    if (innerWin) {
+                        cellDiv.innerHTML = `<div class="text-3xl sm:text-4xl font-extrabold ${innerWin === 'X' ? 'cell-glow-x' : 'cell-glow-o'}">${innerWin === 'D' ? '=' : innerWin}</div><div class="text-[9px] text-slate-400 uppercase font-bold mt-1">Ganado</div>`;
+                    } else {
+                        // Mini preview of 9 inner cells
+                        cellDiv.innerHTML = `
+                            <div class="grid grid-cols-3 gap-1 w-full h-full max-w-[90px] max-h-[90px] pointer-events-none opacity-85">
+                                ${Array(9).fill(0).map((_, inIdx) => {
+                                    const val = data.board[m * 81 + mid * 9 + inIdx];
+                                    return `<div class="bg-slate-950/80 rounded border border-slate-800 flex items-center justify-center text-[11px] font-bold ${val === 'X' ? 'text-red-400' : val === 'O' ? 'text-blue-400' : 'text-slate-700'}">${val}</div>`;
+                                }).join('')}
+                            </div>
+                            <div class="text-[10px] font-bold text-indigo-300 mt-1">Middle #${mid + 1}</div>
+                        `;
+                        cellDiv.addEventListener('click', () => {
+                            navigateTo('inner', m, mid);
+                        });
+                    }
+                    activeGrid.appendChild(cellDiv);
+                }
+            } else if (navState.level === 'inner') {
+                // Show 9 actual Leaf Cells of selectedM & selectedMid
+                const m = navState.selectedM;
+                const mid = navState.selectedMid;
+                const innerWin = innerWins[m * 9 + mid];
+                const isTargetBoard = data.status === 'playing' && (data.targetM === null || (data.targetM === m && data.targetMid === mid));
+
+                for (let inIdx = 0; inIdx < 9; inIdx++) {
+                    const cellBtn = document.createElement('button');
+                    const boardIdx = m * 81 + mid * 9 + inIdx;
+                    const val = data.board[boardIdx];
+                    const canPlay = data.status === 'playing' && data.turn === playerSymbol && isTargetBoard && val === '' && !innerWin;
+
+                    cellBtn.className = `rounded-xl border-2 flex items-center justify-center text-3xl sm:text-4xl font-extrabold transition-all duration-150 focus:outline-none select-none ${
+                        val === 'X' ? 'bg-slate-900 border-red-500/50 text-red-500 cell-glow-x' :
+                        val === 'O' ? 'bg-slate-900 border-blue-500/50 text-blue-500 cell-glow-o' :
+                        canPlay ? 'bg-slate-900/90 border-indigo-500/60 hover:bg-indigo-950/50 hover:border-indigo-400 cursor-pointer shadow-lg shadow-indigo-500/10' :
+                        'bg-slate-950/50 border-slate-800/80 cursor-default opacity-60'
+                    }`;
+                    cellBtn.textContent = val;
+
+                    if (canPlay) {
+                        cellBtn.addEventListener('click', () => makeMove(m, mid, inIdx));
+                    }
+                    activeGrid.appendChild(cellBtn);
+                }
+            }
+        }
+
+        // Make Move Logic
+        async function makeMove(m, mid, inIdx) {
+            if (!currentGameData || currentGameData.status !== 'playing') return;
+            if (currentGameData.turn !== playerSymbol) {
+                showToast("No es tu turno", "fa-hand-paper text-yellow-400");
+                return;
+            }
+
+            // Verify target board rule
+            if (currentGameData.targetM !== null) {
+                if (currentGameData.targetM !== m || currentGameData.targetMid !== mid) {
+                    showToast(`Debes jugar en el tablero activo (Master #${currentGameData.targetM + 1}, Middle #${currentGameData.targetMid + 1})`, "fa-exclamation-triangle text-amber-400");
+                    return;
+                }
+            }
+
+            const boardIdx = m * 81 + mid * 9 + inIdx;
+            if (currentGameData.board[boardIdx] !== "") {
+                showToast("Esta casilla ya está ocupada", "fa-exclamation-circle text-amber-400");
+                return;
+            }
+
+            // Execute move
+            const newBoard = [...currentGameData.board];
+            newBoard[boardIdx] = playerSymbol;
+
+            // Compute new wins
+            const { innerWins, middleWins, masterWin } = computeGameWins(newBoard);
+
+            let nextStatus = "playing";
+            let winner = null;
+
+            if (masterWin) {
+                if (masterWin === 'X' || masterWin === 'O') {
+                    nextStatus = "won";
+                    winner = masterWin;
+                } else if (masterWin === 'D') {
+                    nextStatus = "draw";
+                }
+            }
+
+            // Determine next target board
+            // The next target board is determined by inIdx (since inIdx in current middle board corresponds to target middle board index)
+            let nextTargetM = mid;
+            let nextTargetMid = inIdx;
+
+            // If target board is already won or full, next player gets Free Choice (null, null)
+            const targetBoardWin = innerWins[nextTargetM * 9 + nextTargetMid];
+            const isTargetFull = Array(9).fill(0).every((_, i) => newBoard[nextTargetM * 81 + nextTargetMid * 9 + i] !== "");
+            
+            if (targetBoardWin || isTargetFull || nextStatus !== 'playing') {
+                nextTargetM = null;
+                nextTargetMid = null;
+            }
+
+            const nextTurn = playerSymbol === 'X' ? 'O' : 'X';
+
+            try {
+                const roomRef = getRoomDocRef(currentRoomId);
+                await updateDoc(roomRef, {
+                    board: newBoard,
+                    turn: nextTurn,
+                    status: nextStatus,
+                    winner: winner,
+                    targetM: nextTargetM,
+                    targetMid: nextTargetMid
+                });
+
+                // Automatically navigate back to master or stay if needed
+                if (nextTargetM !== null) {
+                    navState = { level: 'inner', selectedM: nextTargetM, selectedMid: nextTargetMid };
+                }
+            } catch (err) {
+                console.error("Error making move:", err);
+                showToast("Error al registrar el movimiento", "fa-times-circle text-red-400");
+            }
+        }
+
+        // Restart Game
+        btnRestart.addEventListener('click', async () => {
+            if (!currentRoomId) return;
+            try {
+                const roomRef = getRoomDocRef(currentRoomId);
+                await updateDoc(roomRef, {
+                    board: Array(729).fill(""),
+                    turn: "X",
+                    status: "playing",
+                    winner: null,
+                    targetM: null,
+                    targetMid: null
+                });
+                navState = { level: 'master', selectedM: null, selectedMid: null };
+                showToast("Partida reiniciada", "fa-redo text-indigo-400");
+            } catch (err) {
+                console.error("Error restarting:", err);
+            }
+        });
+
+        btnLeave.addEventListener('click', () => {
+            leaveRoom();
+        });
+
+        function leaveRoom() {
+            if (unsubscribeRoom) {
+                unsubscribeRoom();
+                unsubscribeRoom = null;
+            }
+            currentRoomId = null;
+            playerSymbol = null;
+            currentGameData = null;
+            showScreen('lobby');
+            inputRoomCode.value = "";
+            showToast("Has salido de la sala", "fa-info-circle text-slate-400");
+        }
+
+        function showScreen(screen) {
+            if (screen === 'lobby') {
+                lobbyScreen.classList.remove('hidden');
+                lobbyScreen.classList.add('flex');
+                gameScreen.classList.add('hidden');
+                gameScreen.classList.remove('flex');
+            } else {
+                lobbyScreen.classList.add('hidden');
+                lobbyScreen.classList.remove('flex');
+                gameScreen.classList.remove('hidden');
+                gameScreen.classList.add('flex');
+            }
+        }
+    </script>
+</body>
+</html>
